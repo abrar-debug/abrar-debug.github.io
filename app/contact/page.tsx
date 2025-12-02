@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { CustomCursor } from "@/components/custom-cursor"
@@ -29,6 +30,14 @@ export default function ContactPage() {
       <Navbar />
       <main>
         <section className="relative min-h-screen flex items-center justify-center px-8 md:px-12">
+          <div className="absolute top-24 md:top-28 right-8">
+            <Link
+              href="/"
+              className="font-mono text-[10px] tracking-[0.25em] text-muted-foreground hover:text-foreground transition-colors duration-300 uppercase"
+            >
+              ← Back Home
+            </Link>
+          </div>
           <ul className="contact-stack gap-8">
             {contacts.map(({ label, href, Icon }) => (
               <li key={label}>
