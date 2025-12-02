@@ -1,12 +1,19 @@
 /** @type {import('next').NextConfig} */
+const isProd = process.env.NODE_ENV === 'production';
+
 const nextConfig = {
-  output: 'export',          // 👈 tells Next to generate a static site
-  trailingSlash: true,       // 👈 helps with GitHub Pages routing
+  output: 'export',
+  trailingSlash: true,
+
+  // 👇 IMPORTANT: tell Next where the app is hosted in production
+  basePath: isProd ? '/abrar-portfolio' : '',
+  assetPrefix: isProd ? '/abrar-portfolio/' : '',
+
   typescript: {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,       // 👈 required for static export
+    unoptimized: true,
   },
 };
 
