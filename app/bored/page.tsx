@@ -11,8 +11,11 @@ export default function BoredPage() {
   const xRef = useRef(0)
   const [bounds, setBounds] = useState({ width: 0, maxX: 0 })
   const boundsRef = useRef({ width: 0, maxX: 0 })
-  const keys = useRef({ left: false, right: false })
+  const [bullets, setBullets] = useState<{ id: number; x: number; y: number }[]>([])
+  const bulletsRef = useRef<{ id: number; x: number; y: number }[]>([])
+  const keys = useRef({ left: false, right: false, shoot: false })
   const last = useRef<number | null>(null)
+  const lastShot = useRef(0)
 
   useEffect(() => {
     const measure = () => {
@@ -44,11 +47,13 @@ export default function BoredPage() {
       const k = e.key.toLowerCase()
       if (k === "a") keys.current.left = true
       if (k === "d") keys.current.right = true
+      if (k === " ") keys.current.shoot = true
     }
     const up = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase()
       if (k === "a") keys.current.left = false
       if (k === "d") keys.current.right = false
+      if (k === " ") keys.current.shoot = false
     }
     window.addEventListener("keydown", down)
     window.addEventListener("keyup", up)
@@ -75,6 +80,23 @@ export default function BoredPage() {
           setX(nx)
         }
       }
+
+      // Bullets
+      if (keys.current.shoot && t - lastShot.current > 200) {
+        const bulletX = xRef.current + 24 - 2 // center of ship (48px) - half bullet (4px)
+        const bulletY = 32 + 24 // bottom-8 (32px) + h-6 (24px)
+        bulletsRef.current.push({ id: t, x: bulletX, y: bulletY })
+        lastShot.current = t
+      }
+
+      if (bulletsRef.current.length > 0) {
+        const bulletSpeed = 800
+        bulletsRef.current = bulletsRef.current
+          .map((b) => ({ ...b, y: b.y + bulletSpeed * dt }))
+          .filter((b) => b.y < window.innerHeight)
+        setBullets([...bulletsRef.current])
+      }
+
       requestAnimationFrame(loop)
     }
     const id = requestAnimationFrame(loop)
@@ -86,6 +108,13 @@ export default function BoredPage() {
       <CustomCursor />
       <Navbar />
       <main ref={containerRef} className="relative h-screen w-screen overflow-hidden bg-[#050505]">
+        {bullets.map((b) => (
+          <div
+            key={b.id}
+            className="absolute bottom-0 left-0 w-1 h-3 bg-red-500 shadow-[0_0_10px_rgba(255,50,50,0.8)]"
+            style={{ transform: `translate(${b.x}px, -${b.y}px)` }}
+          />
+        ))}
         <motion.div
           style={{ x }}
           className="absolute bottom-8 left-0 w-12 h-6 rounded-sm bg-gradient-to-b from-white/70 to-white/30 shadow-[0_0_20px_rgba(255,255,255,0.25)]"
