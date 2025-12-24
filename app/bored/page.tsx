@@ -14,6 +14,7 @@ export default function BoredPage() {
   const [bullets, setBullets] = useState<{ id: number; x: number; y: number }[]>([])
   const bulletsRef = useRef<{ id: number; x: number; y: number }[]>([])
   const [enemies, setEnemies] = useState<{ id: number; x: number; y: number }[]>([])
+  const enemiesRef = useRef<{ id: number; x: number; y: number }[]>([])
   const keys = useRef({ left: false, right: false, shoot: false })
   const last = useRef<number | null>(null)
   const lastShot = useRef(0)
@@ -37,11 +38,13 @@ export default function BoredPage() {
       // Enemies
       const enemyW = 40
       const enemyY = 100
-      setEnemies([
+      const newEnemies = [
         { id: 1, x: w * 0.25 - enemyW / 2, y: enemyY },
         { id: 2, x: w * 0.5 - enemyW / 2, y: enemyY },
         { id: 3, x: w * 0.75 - enemyW / 2, y: enemyY },
-      ])
+      ]
+      setEnemies(newEnemies)
+      enemiesRef.current = newEnemies
     }
     const id = requestAnimationFrame(measure)
     const onResize = () => measure()
@@ -101,9 +104,68 @@ export default function BoredPage() {
 
       if (bulletsRef.current.length > 0) {
         const bulletSpeed = 800
-        bulletsRef.current = bulletsRef.current
+        const enemyW = 40
+        const enemyH = 40
+        const bulletW = 4
+        const bulletH = 12
+
+        // Move bullets
+        let activeBullets = bulletsRef.current
           .map((b) => ({ ...b, y: b.y + bulletSpeed * dt }))
           .filter((b) => b.y < window.innerHeight)
+
+        // Collision detection
+        if (enemiesRef.current.length > 0) {
+          const nextEnemies: typeof enemiesRef.current = []
+          const destroyedBulletIds = new Set<number>()
+
+          for (const enemy of enemiesRef.current) {
+            let hit = false
+            for (const bullet of activeBullets) {
+              if (destroyedBulletIds.has(bullet.id)) continue
+
+              // Simple AABB collision
+              // Bullet y is distance from bottom, enemy y is distance from top
+              // Convert bullet y to top-relative: window.innerHeight - bullet.y
+              // Actually bullet.y in state seems to be distance from bottom?
+              // Let's check render: transform: `translate(${b.x}px, -${b.y}px)` with bottom-0
+              // So b.y is positive up from bottom.
+              // Enemy y is top-relative (translate y).
+
+              const bulletTop = window.innerHeight - (bullet.y + bulletH)
+              const bulletBottom = window.innerHeight - bullet.y
+              const bulletLeft = bullet.x
+              const bulletRight = bullet.x + bulletW
+
+              const enemyTop = enemy.y
+              const enemyBottom = enemy.y + enemyH
+              const enemyLeft = enemy.x
+              const enemyRight = enemy.x + enemyW
+
+              if (
+                bulletLeft < enemyRight &&
+                bulletRight > enemyLeft &&
+                bulletTop < enemyBottom &&
+                bulletBottom > enemyTop
+              ) {
+                hit = true
+                destroyedBulletIds.add(bullet.id)
+                break // One bullet hits one enemy
+              }
+            }
+            if (!hit) {
+              nextEnemies.push(enemy)
+            }
+          }
+
+          if (destroyedBulletIds.size > 0) {
+            activeBullets = activeBullets.filter((b) => !destroyedBulletIds.has(b.id))
+            enemiesRef.current = nextEnemies
+            setEnemies(nextEnemies)
+          }
+        }
+
+        bulletsRef.current = activeBullets
         setBullets([...bulletsRef.current])
       }
 
