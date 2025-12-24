@@ -13,9 +13,12 @@ export default function BoredPage() {
   const boundsRef = useRef({ width: 0, maxX: 0 })
   const [bullets, setBullets] = useState<{ id: number; x: number; y: number }[]>([])
   const bulletsRef = useRef<{ id: number; x: number; y: number }[]>([])
-  const [enemies, setEnemies] = useState<{ id: number; x: number; y: number }[]>([])
-  const enemiesRef = useRef<{ id: number; x: number; y: number }[]>([])
+  const [enemies, setEnemies] = useState<{ id: number; x: number; y: number; vx: number }[]>([])
+  const enemiesRef = useRef<{ id: number; x: number; y: number; vx: number; vy: number }[]>([])
   const keys = useRef({ left: false, right: false, shoot: false })
+  const [playing, setPlaying] = useState(false)
+  const [gameOver, setGameOver] = useState(false)
+  const playingRef = useRef(false)
   const last = useRef<number | null>(null)
   const lastShot = useRef(0)
 
@@ -38,13 +41,17 @@ export default function BoredPage() {
       // Enemies
       const enemyW = 40
       const enemyY = 100
-      const newEnemies = [
-        { id: 1, x: w * 0.25 - enemyW / 2, y: enemyY },
-        { id: 2, x: w * 0.5 - enemyW / 2, y: enemyY },
-        { id: 3, x: w * 0.75 - enemyW / 2, y: enemyY },
-      ]
-      setEnemies(newEnemies)
-      enemiesRef.current = newEnemies
+      const speed = 150
+      // Check if enemies already exist to avoid resetting them on resize
+      if (enemiesRef.current.length === 0) {
+        const newEnemies = [
+          { id: 1, x: w * 0.25 - enemyW / 2, y: enemyY, vx: speed, vy: 50 },
+          { id: 2, x: w * 0.5 - enemyW / 2, y: enemyY, vx: -speed, vy: 50 },
+          { id: 3, x: w * 0.75 - enemyW / 2, y: enemyY, vx: speed, vy: 50 },
+        ]
+        setEnemies(newEnemies)
+        enemiesRef.current = newEnemies
+      }
     }
     const id = requestAnimationFrame(measure)
     const onResize = () => measure()
@@ -82,6 +89,12 @@ export default function BoredPage() {
       if (last.current == null) last.current = t
       const dt = (t - last.current) / 1000
       last.current = t
+
+      if (!playingRef.current) {
+        requestAnimationFrame(loop)
+        return
+      }
+
       let dir = 0
       if (keys.current.left) dir -= 1
       if (keys.current.right) dir += 1
@@ -92,6 +105,85 @@ export default function BoredPage() {
           xRef.current = nx
           setX(nx)
         }
+      }
+
+      // Move Enemies
+      if (enemiesRef.current.length > 0) {
+        const enemyW = 40
+        const enemyH = 40
+        const maxX = boundsRef.current.width - enemyW
+        let changed = false
+        const nextEnemies = enemiesRef.current.map((e) => {
+          let nx = e.x + e.vx * dt
+          let ny = e.y + e.vy * dt
+          let nvx = e.vx
+          if (nx <= 0) {
+            nx = 0
+            nvx = -nvx
+          } else if (nx >= maxX) {
+            nx = maxX
+            nvx = -nvx
+          }
+          if (nx !== e.x || ny !== e.y) changed = true
+          return { ...e, x: nx, y: ny, vx: nvx }
+        })
+
+        // Check for player collision
+        const playerX = xRef.current
+        const playerY = window.innerHeight - 32 - 24 // bottom-8 + h-6
+        const playerW = 48
+        const playerH = 24
+        
+        for (const enemy of nextEnemies) {
+          if (
+            enemy.x < playerX + playerW &&
+            enemy.x + enemyW > playerX &&
+            enemy.y < playerY + playerH &&
+            enemy.y + enemyH > playerY
+          ) {
+             setGameOver(true)
+             setPlaying(false)
+             playingRef.current = false
+             return // Stop loop
+          }
+        }
+
+        if (changed) {
+          enemiesRef.current = nextEnemies
+          setEnemies(nextEnemies)
+        }
+      }
+
+      // Spawner logic
+      if (enemiesRef.current.length < 5 && Math.random() < 0.02) {
+         const w = boundsRef.current.width
+         const enemyW = 40
+         const enemyY = -40 // Start slightly above
+         const speed = 150 + Math.random() * 100
+         const newEnemy = {
+           id: Date.now() + Math.random(),
+           x: Math.random() * (w - enemyW),
+           y: enemyY,
+           vx: Math.random() > 0.5 ? speed : -speed,
+           vy: 50 + Math.random() * 50
+         }
+         enemiesRef.current.push(newEnemy)
+         // Note: setEnemies will happen in next frame or shared batch if we are lucky, 
+         // but strictly we updated ref so next loop sees it. 
+         // For React render update we rely on the `changed` block above in next frame 
+         // or we can force it here. Let's force it if we want instant render but maybe better to wait next loop
+         // Actually let's just add it to ref and let the next loop's "changed" check pick it up? 
+         // Wait, the map above creates nextEnemies from current ref. 
+         // If we push now, it won't be in nextEnemies that was just set.
+         // So we should add it to nextEnemies or update ref after.
+         // Let's simple add to ref and force setEnemies
+         setEnemies([...enemiesRef.current])
+      }
+      
+      // Cleanup off-screen enemies
+      if (enemiesRef.current.some(e => e.y > window.innerHeight)) {
+        enemiesRef.current = enemiesRef.current.filter(e => e.y <= window.innerHeight)
+        setEnemies([...enemiesRef.current])
       }
 
       // Bullets
@@ -175,11 +267,57 @@ export default function BoredPage() {
     return () => cancelAnimationFrame(id)
   }, [])
 
+  const startGame = () => {
+    // Reset game state
+    setGameOver(false)
+    const w = boundsRef.current.width
+    const enemyW = 40
+    const enemyY = 100
+    const speed = 150
+    const startEnemies = [
+      { id: 1, x: w * 0.25 - enemyW / 2, y: enemyY, vx: speed, vy: 50 },
+      { id: 2, x: w * 0.5 - enemyW / 2, y: enemyY, vx: -speed, vy: 50 },
+      { id: 3, x: w * 0.75 - enemyW / 2, y: enemyY, vx: speed, vy: 50 },
+    ]
+    enemiesRef.current = startEnemies
+    setEnemies(startEnemies)
+    bulletsRef.current = []
+    setBullets([])
+    xRef.current = Math.floor(w / 2 - 24)
+    setX(xRef.current)
+    
+    setPlaying(true)
+    playingRef.current = true
+  }
+
   return (
     <SmoothScroll>
       <CustomCursor />
       <Navbar />
       <main ref={containerRef} className="relative h-screen w-screen overflow-hidden bg-[#050505]">
+        {(!playing || gameOver) && (
+          <div className="fixed bottom-0 left-0 z-50 flex w-full items-center justify-between border-t border-white/10 bg-black/90 px-8 py-6 backdrop-blur-md">
+            <div className="flex items-center gap-8 text-sm text-white/60">
+              <h1 className="text-xl font-bold tracking-tighter text-white">
+                {gameOver ? "GAME OVER" : "VOID SHOOTER"}
+              </h1>
+              <div className="h-4 w-px bg-white/10" />
+              <p>
+                <span className="font-bold text-white">A / D</span> to Move
+              </p>
+              <p>
+                <span className="font-bold text-white">SPACE</span> to Shoot
+              </p>
+            </div>
+            <button
+              onClick={startGame}
+              className="group relative px-8 py-2 text-sm font-bold uppercase tracking-widest text-white transition-colors hover:text-black"
+            >
+              <div className="absolute inset-0 border border-white transition-all group-hover:bg-white" />
+              <span className="relative">{gameOver ? "RETRY" : "PLAY"}</span>
+            </button>
+          </div>
+        )}
         {enemies.map((e) => (
           <div
             key={e.id}
@@ -196,7 +334,9 @@ export default function BoredPage() {
         ))}
         <motion.div
           style={{ x }}
-          className="absolute bottom-8 left-0 w-12 h-6 rounded-sm bg-gradient-to-b from-white/70 to-white/30 shadow-[0_0_20px_rgba(255,255,255,0.25)]"
+          className={`absolute left-0 w-12 h-6 rounded-sm bg-gradient-to-b from-white/70 to-white/30 shadow-[0_0_20px_rgba(255,255,255,0.25)] transition-all duration-500 ${
+            playing ? "bottom-8" : "bottom-32"
+          }`}
         />
       </main>
     </SmoothScroll>
