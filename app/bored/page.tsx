@@ -13,8 +13,8 @@ export default function BoredPage() {
   const boundsRef = useRef({ width: 0, maxX: 0 })
   const [bullets, setBullets] = useState<{ id: number; x: number; y: number }[]>([])
   const bulletsRef = useRef<{ id: number; x: number; y: number }[]>([])
-  const [enemies, setEnemies] = useState<{ id: number; x: number; y: number; vx: number }[]>([])
-  const enemiesRef = useRef<{ id: number; x: number; y: number; vx: number; vy: number }[]>([])
+  const [enemies, setEnemies] = useState<{ id: number; x: number; y: number; vx: number; vy: number; type: 'easy' | 'medium' | 'hard'; health: number }[]>([])
+  const enemiesRef = useRef<{ id: number; x: number; y: number; vx: number; vy: number; type: 'easy' | 'medium' | 'hard'; health: number }[]>([])
   const keys = useRef({ left: false, right: false, shoot: false })
   const [playing, setPlaying] = useState(false)
   const [gameOver, setGameOver] = useState(false)
@@ -45,9 +45,9 @@ export default function BoredPage() {
       // Check if enemies already exist to avoid resetting them on resize
       if (enemiesRef.current.length === 0) {
         const newEnemies = [
-          { id: 1, x: w * 0.25 - enemyW / 2, y: enemyY, vx: speed, vy: 50 },
-          { id: 2, x: w * 0.5 - enemyW / 2, y: enemyY, vx: -speed, vy: 50 },
-          { id: 3, x: w * 0.75 - enemyW / 2, y: enemyY, vx: speed, vy: 50 },
+          { id: 1, x: w * 0.25 - enemyW / 2, y: enemyY, vx: speed, vy: 50, type: 'easy' as const, health: 1 },
+          { id: 2, x: w * 0.5 - enemyW / 2, y: enemyY, vx: -speed, vy: 50, type: 'easy' as const, health: 1 },
+          { id: 3, x: w * 0.75 - enemyW / 2, y: enemyY, vx: speed, vy: 50, type: 'easy' as const, health: 1 },
         ]
         setEnemies(newEnemies)
         enemiesRef.current = newEnemies
@@ -144,7 +144,8 @@ export default function BoredPage() {
              setGameOver(true)
              setPlaying(false)
              playingRef.current = false
-             return // Stop loop
+             requestAnimationFrame(loop)
+             return // Stop current frame logic, but keep loop alive
           }
         }
 
@@ -160,23 +161,34 @@ export default function BoredPage() {
          const enemyW = 40
          const enemyY = -40 // Start slightly above
          const speed = 150 + Math.random() * 100
+         
+         const rand = Math.random()
+         let type: 'easy' | 'medium' | 'hard' = 'easy'
+         let health = 1
+         
+         // Weighted spawning:
+         // Total weight = 1 (easy) + 0.7 (medium) + 0.5 (hard) = 2.2
+         // Easy: < 0.45 (1/2.2)
+         // Medium: < 0.77 (1.7/2.2)
+         // Hard: >= 0.77
+         if (rand > 0.77) {
+            type = 'hard'
+            health = 4
+         } else if (rand > 0.45) {
+            type = 'medium'
+            health = 2
+         }
+
          const newEnemy = {
            id: Date.now() + Math.random(),
            x: Math.random() * (w - enemyW),
            y: enemyY,
            vx: Math.random() > 0.5 ? speed : -speed,
-           vy: 50 + Math.random() * 50
+           vy: 50 + Math.random() * 50,
+           type,
+           health
          }
          enemiesRef.current.push(newEnemy)
-         // Note: setEnemies will happen in next frame or shared batch if we are lucky, 
-         // but strictly we updated ref so next loop sees it. 
-         // For React render update we rely on the `changed` block above in next frame 
-         // or we can force it here. Let's force it if we want instant render but maybe better to wait next loop
-         // Actually let's just add it to ref and let the next loop's "changed" check pick it up? 
-         // Wait, the map above creates nextEnemies from current ref. 
-         // If we push now, it won't be in nextEnemies that was just set.
-         // So we should add it to nextEnemies or update ref after.
-         // Let's simple add to ref and force setEnemies
          setEnemies([...enemiesRef.current])
       }
       
@@ -242,10 +254,21 @@ export default function BoredPage() {
               ) {
                 hit = true
                 destroyedBulletIds.add(bullet.id)
-                break // One bullet hits one enemy
+                
+                // Damage logic
+                enemy.health -= 1
+                if (enemy.health <= 0) {
+                    break // Destroyed
+                } else {
+                    hit = false // Bullet destroyed, enemy survives
+                    // We need to stop checking bullets for this enemy if we only want 1 bullet per frame?
+                    // But we already added bullet to destroyed set, so it won't hit others.
+                    // But if we continue inner loop, other bullets might hit this same enemy in same frame.
+                    // That is acceptable.
+                }
               }
             }
-            if (!hit) {
+            if (!hit || enemy.health > 0) {
               nextEnemies.push(enemy)
             }
           }
@@ -275,9 +298,9 @@ export default function BoredPage() {
     const enemyY = 100
     const speed = 150
     const startEnemies = [
-      { id: 1, x: w * 0.25 - enemyW / 2, y: enemyY, vx: speed, vy: 50 },
-      { id: 2, x: w * 0.5 - enemyW / 2, y: enemyY, vx: -speed, vy: 50 },
-      { id: 3, x: w * 0.75 - enemyW / 2, y: enemyY, vx: speed, vy: 50 },
+      { id: 1, x: w * 0.25 - enemyW / 2, y: enemyY, vx: speed, vy: 50, type: 'easy' as const, health: 1 },
+      { id: 2, x: w * 0.5 - enemyW / 2, y: enemyY, vx: -speed, vy: 50, type: 'easy' as const, health: 1 },
+      { id: 3, x: w * 0.75 - enemyW / 2, y: enemyY, vx: speed, vy: 50, type: 'easy' as const, health: 1 },
     ]
     enemiesRef.current = startEnemies
     setEnemies(startEnemies)
@@ -321,7 +344,11 @@ export default function BoredPage() {
         {enemies.map((e) => (
           <div
             key={e.id}
-            className="absolute top-0 left-0 w-10 h-10 bg-green-500 shadow-[0_0_15px_rgba(50,255,50,0.6)] [clip-path:polygon(50%_100%,0%_0%,100%_0%)]"
+            className={`absolute top-0 left-0 w-10 h-10 shadow-[0_0_15px_rgba(50,255,50,0.6)] [clip-path:polygon(50%_100%,0%_0%,100%_0%)] ${
+              e.type === 'hard' ? 'bg-red-500 shadow-[0_0_15px_rgba(255,50,50,0.6)]' :
+              e.type === 'medium' ? 'bg-yellow-500 shadow-[0_0_15px_rgba(255,255,50,0.6)]' :
+              'bg-green-500 shadow-[0_0_15px_rgba(50,255,50,0.6)]'
+            }`}
             style={{ transform: `translate(${e.x}px, ${e.y}px)` }}
           />
         ))}
@@ -332,9 +359,9 @@ export default function BoredPage() {
             style={{ transform: `translate(${b.x}px, -${b.y}px)` }}
           />
         ))}
-        <motion.div
-          style={{ x }}
-          className={`absolute left-0 w-12 h-6 rounded-sm bg-gradient-to-b from-white/70 to-white/30 shadow-[0_0_20px_rgba(255,255,255,0.25)] transition-all duration-500 ${
+        <div
+          style={{ transform: `translateX(${x}px)` }}
+          className={`absolute left-0 w-12 h-6 rounded-sm bg-gradient-to-b from-white/70 to-white/30 shadow-[0_0_20px_rgba(255,255,255,0.25)] transition-[bottom] duration-500 ${
             playing ? "bottom-8" : "bottom-32"
           }`}
         />
