@@ -5,6 +5,7 @@ import { SmoothScroll } from "@/components/smooth-scroll"
 import { motion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 import { EnemyEasy, EnemyMedium, EnemyHard } from "./enemies"
+import { PlayerShip } from "./player-ship"
 
 export default function BoredPage() {
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -377,10 +378,12 @@ export default function BoredPage() {
         ))}
         <div
           style={{ transform: `translateX(${x}px)` }}
-          className={`absolute left-0 w-12 h-6 rounded-sm bg-gradient-to-b from-white/70 to-white/30 shadow-[0_0_20px_rgba(255,255,255,0.25)] transition-[bottom] duration-500 ${
+          className={`absolute left-0 w-12 h-12 transition-[bottom] duration-500 ${
             playing ? "bottom-8" : "bottom-32"
           }`}
-        />
+        >
+          <PlayerShip className="w-full h-full text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
+        </div>
       </main>
     </SmoothScroll>
   )
