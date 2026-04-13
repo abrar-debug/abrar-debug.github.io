@@ -26,6 +26,14 @@ const timelineItems = [
     title: "Junior Software Engineer",
     location: "Kaizentech",
     type: "work",
+    current: true,
+  },
+  {
+    period: "2026 Jan",
+    title: "Sentiosk.",
+    location: "Founder",
+    type: "work",
+    current: true,
   },
 ]
 
@@ -83,7 +91,12 @@ export function Timeline() {
                 </div>
 
                 {/* Type Badge */}
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 flex items-center gap-2">
+                  {item.current && (
+                    <span className="font-mono text-[10px] tracking-wider px-3 py-1 border rounded-full border-accent/60 text-accent">
+                      CURRENT
+                    </span>
+                  )}
                   <span
                     className={`font-mono text-[10px] tracking-wider px-3 py-1 border rounded-full ${
                       item.type === "work"
