@@ -22,13 +22,44 @@ const pillars = [
   },
 ]
 
+const offerings = [
+  {
+    id: "nova",
+    name: "Sentiosk Nova",
+    subtitle: "Restaurant POS System",
+    description:
+      "Built for restaurants and food service teams, Nova supports fast order flow, table-based operations, and high-volume service periods without slowing down.",
+  },
+  {
+    id: "mira",
+    name: "Sentiosk Mira",
+    subtitle: "Retail POS System",
+    description:
+      "Designed for retail environments, Mira streamlines checkout, product lookup, and inventory-linked selling for stores that need speed and accuracy at the counter.",
+  },
+  {
+    id: "luna",
+    name: "Sentiosk Luna",
+    subtitle: "Tablet POS for Kiosks & Small Stores",
+    description:
+      "A lightweight tablet-first POS experience for kiosks and small stores, balancing ease of use with dependable daily transaction performance.",
+  },
+  {
+    id: "hq",
+    name: "Sentiosk HQ",
+    subtitle: "Multi-Store Admin Dashboard",
+    description:
+      "Admin dashboard for sales and inventory management across all Sentiosk POS terminals, giving owners and operators one control center for multi-store operations.",
+  },
+]
+
 export default function SentioskPage() {
   return (
     <SmoothScroll>
       <CustomCursor />
       <Navbar />
       <main>
-        <section className="relative py-32 px-8 md:px-12 md:py-24 max-w-6xl mx-auto">
+        <section className="relative py-32 px-8 md:px-12 md:py-24">
           <div className="flex items-center justify-between mb-4">
             <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground">SENTIOSK</p>
             <Link
@@ -56,6 +87,27 @@ export default function SentioskPage() {
                 <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{pillar.description}</p>
               </article>
             ))}
+          </div>
+
+          <div className="mt-20 border-t border-white/10 pt-12">
+            <p className="font-mono text-xs tracking-[0.3em] text-muted-foreground mb-4">OFFERINGS</p>
+            <h2 className="font-sans text-2xl md:text-4xl font-light tracking-tight mb-10">
+              Sentiosk product suite
+            </h2>
+
+            <div className="grid gap-6 md:gap-8">
+              {offerings.map((offering) => (
+                <section key={offering.id} className="border border-white/10 rounded-xl p-6 md:p-8 bg-white/[0.02]">
+                  <p className="font-sans text-xl md:text-3xl font-light tracking-tight">{offering.name}</p>
+                  <p className="mt-2 font-mono text-[10px] md:text-xs tracking-[0.2em] text-muted-foreground uppercase">
+                    {offering.subtitle}
+                  </p>
+                  <p className="mt-5 text-xs md:text-sm text-muted-foreground leading-relaxed max-w-3xl">
+                    {offering.description}
+                  </p>
+                </section>
+              ))}
+            </div>
           </div>
         </section>
 
