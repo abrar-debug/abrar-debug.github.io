@@ -1,8 +1,10 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { CustomCursor } from "@/components/custom-cursor"
 import { SmoothScroll } from "@/components/smooth-scroll"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 
 const pillars = [
   {
@@ -57,6 +59,17 @@ const offerings = [
   },
 ]
 
+const novaGalleryImages = [
+  "/sentiosk/nova/Screenshot 2026-04-13 135601.png",
+  "/sentiosk/nova/Screenshot 2026-04-13 135812.png",
+  "/sentiosk/nova/Screenshot 2026-04-13 135504.png",
+  "/sentiosk/nova/Screenshot 2026-04-13 135447.png",
+  "/sentiosk/nova/Screenshot 2026-04-13 135530.png",
+  "/sentiosk/nova/Screenshot 2026-04-13 135540.png",
+  "/sentiosk/nova/Screenshot 2026-04-13 135458.png",
+  "/sentiosk/nova/Screenshot 2026-04-13 135513.png",
+]
+
 export default function SentioskPage() {
   return (
     <SmoothScroll>
@@ -102,20 +115,65 @@ export default function SentioskPage() {
             <div className="grid gap-6 md:gap-8">
               {offerings.map((offering) => (
                 <section key={offering.id} className="border border-white/10 rounded-xl p-6 md:p-8 bg-white/[0.02]">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <p className="font-sans text-xl md:text-3xl font-light tracking-tight">{offering.name}</p>
-                    {offering.status && (
-                      <span className="font-mono text-[10px] tracking-wider px-3 py-1 border border-accent/50 rounded-full text-accent uppercase">
-                        {offering.status}
-                      </span>
+                  <div className={offering.id === "nova" ? "grid gap-6 md:gap-8 lg:grid-cols-2 lg:items-start" : ""}>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <p className="font-sans text-xl md:text-3xl font-light tracking-tight">{offering.name}</p>
+                        {offering.status && (
+                          <span className="font-mono text-[10px] tracking-wider px-3 py-1 border border-accent/50 rounded-full text-accent uppercase">
+                            {offering.status}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-2 font-mono text-[10px] md:text-xs tracking-[0.2em] text-muted-foreground uppercase">
+                        {offering.subtitle}
+                      </p>
+                      <p className="mt-5 text-xs md:text-sm text-muted-foreground leading-relaxed max-w-3xl">
+                        {offering.description}
+                      </p>
+                      {offering.id === "nova" && (
+                        <div className="mt-6 border border-white/10 rounded-xl p-5 md:p-6 bg-white/[0.02] max-w-3xl">
+                          <p className="font-mono text-[10px] md:text-xs tracking-[0.2em] text-muted-foreground uppercase mb-3">
+                            Nova Tech Stack
+                          </p>
+                          <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
+                            <li>.NET POS terminal</li>
+                            <li>Node.js API</li>
+                            <li>TypeScript admin dashboard (Sentiosk HQ)</li>
+                            <li>Hosted on AWS</li>
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    {offering.id === "nova" && (
+                      <div className="relative px-10 md:px-12">
+                        <Carousel
+                          opts={{ align: "start", loop: true }}
+                          className="w-full"
+                        >
+                          <CarouselContent className="-ml-0">
+                            {novaGalleryImages.map((imageSrc) => (
+                              <CarouselItem key={imageSrc} className="pl-0">
+                                <div className="group relative overflow-hidden rounded-lg border border-white/10 bg-black/40">
+                                  <Image
+                                    src={imageSrc}
+                                    alt="Sentiosk Nova interface screenshot"
+                                    width={1200}
+                                    height={800}
+                                    className="h-auto w-full transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                                  />
+                                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-transparent opacity-35 transition-opacity duration-300 group-hover:opacity-10" />
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          <CarouselPrevious className="left-0 border-white/20 bg-black/60 hover:bg-black/80" />
+                          <CarouselNext className="right-0 border-white/20 bg-black/60 hover:bg-black/80" />
+                        </Carousel>
+                      </div>
                     )}
                   </div>
-                  <p className="mt-2 font-mono text-[10px] md:text-xs tracking-[0.2em] text-muted-foreground uppercase">
-                    {offering.subtitle}
-                  </p>
-                  <p className="mt-5 text-xs md:text-sm text-muted-foreground leading-relaxed max-w-3xl">
-                    {offering.description}
-                  </p>
                 </section>
               ))}
             </div>
