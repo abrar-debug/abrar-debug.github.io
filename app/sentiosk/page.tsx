@@ -27,6 +27,7 @@ const offerings = [
     id: "nova",
     name: "Sentiosk Nova",
     subtitle: "Restaurant POS System",
+    status: "In Production",
     description:
       "Built for restaurants and food service teams, Nova supports fast order flow, table-based operations, and high-volume service periods without slowing down.",
   },
@@ -34,6 +35,7 @@ const offerings = [
     id: "mira",
     name: "Sentiosk Mira",
     subtitle: "Retail POS System",
+    status: "In Development",
     description:
       "Designed for retail environments, Mira streamlines checkout, product lookup, and inventory-linked selling for stores that need speed and accuracy at the counter.",
   },
@@ -41,6 +43,7 @@ const offerings = [
     id: "luna",
     name: "Sentiosk Luna",
     subtitle: "Tablet POS for Kiosks & Small Stores",
+    status: "In Early Development",
     description:
       "A lightweight tablet-first POS experience for kiosks and small stores, balancing ease of use with dependable daily transaction performance.",
   },
@@ -48,6 +51,7 @@ const offerings = [
     id: "hq",
     name: "Sentiosk HQ",
     subtitle: "Multi-Store Admin Dashboard",
+    status: "In Production",
     description:
       "Admin dashboard for sales and inventory management across all Sentiosk POS terminals, giving owners and operators one control center for multi-store operations.",
   },
@@ -98,7 +102,14 @@ export default function SentioskPage() {
             <div className="grid gap-6 md:gap-8">
               {offerings.map((offering) => (
                 <section key={offering.id} className="border border-white/10 rounded-xl p-6 md:p-8 bg-white/[0.02]">
-                  <p className="font-sans text-xl md:text-3xl font-light tracking-tight">{offering.name}</p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p className="font-sans text-xl md:text-3xl font-light tracking-tight">{offering.name}</p>
+                    {offering.status && (
+                      <span className="font-mono text-[10px] tracking-wider px-3 py-1 border border-accent/50 rounded-full text-accent uppercase">
+                        {offering.status}
+                      </span>
+                    )}
+                  </div>
                   <p className="mt-2 font-mono text-[10px] md:text-xs tracking-[0.2em] text-muted-foreground uppercase">
                     {offering.subtitle}
                   </p>
