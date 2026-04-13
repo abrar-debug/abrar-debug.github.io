@@ -13,6 +13,7 @@ const devImages = [
     title: "Al-Rafahia",
     summary: "Al-Rafahia is a custom manufacturing company that produces laser cut wall art, signage and braai accessories.",
     tags: ["React", "WooCommerce", "PHP"],
+    projectTag: "Kaizen Technology",
     year: "2025",
     image: alrafahiaImg,
   },
@@ -21,6 +22,7 @@ const devImages = [
     summary:
       "Online custom scrubs shop with personalized fits, streamlined product selection, and a checkout flow optimized for mobile shoppers.",
     tags: ["WooCommerce", "TypeScript", "PHP"],
+    projectTag: "Kaizen Technology",
     year: "2026",
     image: "/works/soochuh.png",
   },
@@ -29,6 +31,7 @@ const devImages = [
     summary:
       "Doctor portfolio site designed to showcase credentials, services, and thought leadership through a clean, trustworthy content experience.",
     tags: ["Sanity", "Vue"],
+    projectTag: "Kaizen Technology",
     year: "2026",
     image: "/works/dr-nabs.png",
   },
@@ -37,6 +40,7 @@ const devImages = [
     summary:
       "Doctors practice website focused on patient-first information architecture, clear service pages, and easy appointment journey touchpoints.",
     tags: ["Sanity", "TypeScript"],
+    projectTag: "Kaizen Technology",
     year: "2026",
     image: "/works/soochuh-medical.png",
   },
@@ -242,6 +246,13 @@ export function WorksGrid() {
                   <p className="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-xl">
                     {item.summary}
                   </p>
+                  {item.projectTag && (
+                    <div className="mt-3">
+                      <span className="font-mono text-[10px] tracking-wider px-3 py-1 border border-accent/50 rounded-full text-accent">
+                        {item.projectTag}
+                      </span>
+                    </div>
+                  )}
                   <div className="mt-3 flex flex-wrap gap-2">
                     {item.tags.map((tag) => (
                       <span
